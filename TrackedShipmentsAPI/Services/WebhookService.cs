@@ -28,8 +28,8 @@ namespace TrackedShipmentsAPI.Services
         public const string POL = "POL";
         public const string TSP = "TSP";
         public const string POD = "POD";
-        public const int MIN_TSP_PHASES_INDEX = 4;
-        public const int MIN_LEG_QUANTITY = 5;
+        public const int MIN_TSP_MILESTONES_LENGTH = 4;
+        public const int MIN_LEG_LENGTH = 5;
 
         public Dictionary<string, string> wwEventsMapping = new Dictionary<string, string>
         {
@@ -55,15 +55,22 @@ namespace TrackedShipmentsAPI.Services
         // Creates all leg data of at least 5 first legs (some can be empty if no data) to adhere to data structure
         public void AddLegsData(JObject json, Milestone[] milestones)
         {
-            int maxLegLength = Math.Max(MIN_LEG_QUANTITY, milestones.Length - 1);
+            int maxLegLength = Math.Max(MIN_LEG_LENGTH, milestones.Length - 1);
             JObject aggregatedJson = new JObject();
 
-            for (int i = maxLegLength - 1; i >= 0; i--)
+            for (int i = 0; i < maxLegLength; i++)
             {
+                Milestone? currentIteratedMilestone = new Milestone();
+
+                if (i < milestones?.Length) {
+                    currentIteratedMilestone = milestones[i];
+                }
+                
                 JObject legVesselObject = new JObject();
-                legVesselObject["name"] = milestones[i]?.departure?.vessel?.name ?? "";
-                legVesselObject["imo"] = milestones[i]?.departure?.vessel?.imo ?? "";
+                legVesselObject["name"] = currentIteratedMilestone?.departure?.vessel?.name ?? "";
+                legVesselObject["imo"] = currentIteratedMilestone?.departure?.vessel?.imo ?? "";
                 legVesselObject["id"] = "";
+
 
                 JObject legServiceObject = new JObject();
                 legServiceObject["id"] = "";
@@ -73,8 +80,8 @@ namespace TrackedShipmentsAPI.Services
 
                 string prefix = $"leg{i + 1}";
                 aggregatedJson[$"{prefix}_vessel"] = legVesselObject;
-                aggregatedJson[$"{prefix}_voyage"] = milestones[i]?.departure?.voyage ?? "";
                 aggregatedJson[$"{prefix}_service"] = legServiceObject;
+                aggregatedJson[$"{prefix}_voyage"] = currentIteratedMilestone?.departure?.voyage ?? "";
             }
 
             JObject legsJson = JObject.Parse($@"
@@ -190,12 +197,22 @@ namespace TrackedShipmentsAPI.Services
 
             JObject aggregatedTransshipmentsJson = new JObject();
 
-            for (int i = 0; i <= Math.Min(tspMilestones.Length - 1, 4); i++)
-            {
-                Milestone? currentIteratedMilestone = tspMilestones[i];
+            int maxTspLength = Math.Max(tspMilestones.Length - 1, MIN_TSP_MILESTONES_LENGTH);
 
-                Event? dischargeEvent = tspEvents.FirstOrDefault((item) => currentIteratedMilestone?.arrival?.vessel?.name == item.vessel?.name && item.description == DISCHARGE_AT_TSP);
-                Event? loadedEvent = tspEvents.FirstOrDefault((item) => currentIteratedMilestone?.departure?.vessel?.name == item.vessel?.name && item.description == LOADED_AT_TSP);
+            for (int i = 0; i <= maxTspLength; i++)
+            {
+                Milestone? currentIteratedMilestone = new Milestone();
+
+                if (i < tspMilestones.Length)
+                {
+                    currentIteratedMilestone = tspMilestones[i];
+                }
+
+                Vessel? currentArrivalVessel = currentIteratedMilestone?.arrival?.vessel;
+                Vessel? currentDepartureVessel = currentIteratedMilestone?.departure?.vessel;
+
+                Event? dischargeEvent = tspEvents.FirstOrDefault((item) => ((currentArrivalVessel?.name != null && currentArrivalVessel?.name == item.vessel?.name) || (currentArrivalVessel?.imo != null && currentArrivalVessel?.imo == item.vessel?.imo)) && item.description == DISCHARGE_AT_TSP);
+                Event? loadedEvent = tspEvents.FirstOrDefault((item) => ((currentDepartureVessel?.name != null && currentDepartureVessel?.name == item.vessel?.name) || (currentDepartureVessel?.imo != null && currentDepartureVessel?.imo == item.vessel?.imo)) && item.description == LOADED_AT_TSP);
 
                 string prefix = $"tsp{i + 1}";
 
