@@ -78,7 +78,7 @@ namespace TrackedShipmentsAPI.Services
 
             if (response?.errors != null)
             {
-                throw new Exception("Failed to upsert tracked shipments: ", response?.errors);
+                throw new Exception($"Failed to upsert tracked shipments: {response?.errors[0]?.message}");
             }
 
             var trackedShipments = Newtonsoft.Json.JsonConvert.SerializeObject(response);
@@ -205,7 +205,12 @@ namespace TrackedShipmentsAPI.Services
 
             if (response?.errors != null)
             {
-                throw new Exception("Failed to upsert tracked shipments: ", response?.errors);
+                throw new Exception($"Failed to upsert tracked shipments: {response?.errors[0]?.message}");
+            }
+
+            if (response?.data?.trackedShipmentsByIds.Count == 0)
+            {
+                throw new Exception("No tracked shipments found based on requested id.");
             }
 
             return response ?? throw new Exception("Response data is null");

@@ -28,7 +28,7 @@ namespace TrackedShipmentsAPI.Services
         public const string POL = "POL";
         public const string TSP = "TSP";
         public const string POD = "POD";
-        public const int MIN_TSP_PHASES_INDEX = 4;
+        public const int MIN_TSP_MILESTONES_INDEX = 4;
         public const int MIN_LEG_QUANTITY = 5;
 
         public Dictionary<string, string> wwEventsMapping = new Dictionary<string, string>
@@ -197,7 +197,9 @@ namespace TrackedShipmentsAPI.Services
 
             JObject aggregatedTransshipmentsJson = new JObject();
 
-            for (int i = 0; i <= Math.Max(tspMilestones.Length - 1, 4); i++)
+            int maxTspLength = Math.Max(tspMilestones.Length - 1, MIN_TSP_MILESTONES_INDEX);
+
+            for (int i = 0; i <= maxTspLength; i++)
             {
                 Milestone? currentIteratedMilestone = new Milestone();
 
@@ -206,11 +208,14 @@ namespace TrackedShipmentsAPI.Services
                     currentIteratedMilestone = tspMilestones[i];
                 }
 
-                string? currentVesselName = currentIteratedMilestone?.arrival?.vessel?.name;
-                string? currentVesselIMO = currentIteratedMilestone?.arrival?.vessel?.imo;
+                string? currentArrivalVesselName = currentIteratedMilestone?.arrival?.vessel?.name;
+                string? currentArrivalVesselIMO = currentIteratedMilestone?.arrival?.vessel?.imo;
 
-                Event? dischargeEvent = tspEvents.FirstOrDefault((item) => ((currentVesselName != null && currentVesselName == item.vessel?.name) || (currentVesselIMO != null && currentVesselIMO == item.vessel?.imo)) && item.description == DISCHARGE_AT_TSP);
-                Event? loadedEvent = tspEvents.FirstOrDefault((item) => ((currentVesselName != null && currentVesselName == item.vessel?.name) || (currentVesselIMO != null && currentVesselIMO == item.vessel?.imo)) && item.description == LOADED_AT_TSP);
+                string? currentDepartureVesselName = currentIteratedMilestone?.departure?.vessel?.name;
+                string? currentDepartureVesselIMO = currentIteratedMilestone?.departure?.vessel?.imo;
+
+                Event? dischargeEvent = tspEvents.FirstOrDefault((item) => ((currentArrivalVesselName != null && currentArrivalVesselName == item.vessel?.name) || (currentArrivalVesselIMO != null && currentArrivalVesselIMO == item.vessel?.imo)) && item.description == DISCHARGE_AT_TSP);
+                Event? loadedEvent = tspEvents.FirstOrDefault((item) => ((currentDepartureVesselName != null && currentDepartureVesselName == item.vessel?.name) || (currentDepartureVesselIMO != null && currentDepartureVesselIMO == item.vessel?.imo)) && item.description == LOADED_AT_TSP);
 
                 string prefix = $"tsp{i + 1}";
 
