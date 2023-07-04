@@ -76,9 +76,9 @@ namespace TrackedShipmentsAPI.Services
 
             var response = await SendGraphQlRequest(query, variables, token);
 
-            if (response?.Errors != null)
+            if (response?.errors != null)
             {
-                throw new Exception("Failed to upsert tracked shipments: ", response?.Errors);
+                throw new Exception("Failed to upsert tracked shipments: ", response?.errors);
             }
 
             var trackedShipments = Newtonsoft.Json.JsonConvert.SerializeObject(response);
@@ -203,9 +203,9 @@ namespace TrackedShipmentsAPI.Services
 
             var response = await SendGraphQlRequest(currentQuery, variables, token);
 
-            if (response?.Errors != null)
+            if (response?.errors != null)
             {
-                throw new Exception("Failed to upsert tracked shipments: ", response?.Errors);
+                throw new Exception("Failed to upsert tracked shipments: ", response?.errors);
             }
 
             return response ?? throw new Exception("Response data is null");

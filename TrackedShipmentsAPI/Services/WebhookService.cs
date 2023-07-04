@@ -58,12 +58,21 @@ namespace TrackedShipmentsAPI.Services
             int maxLegLength = Math.Max(MIN_LEG_QUANTITY, milestones.Length - 1);
             JObject aggregatedJson = new JObject();
 
-            for (int i = maxLegLength - 1; i >= 0; i--)
+            for (int i = 0; i < maxLegLength; i++)
             {
                 JObject legVesselObject = new JObject();
-                legVesselObject["name"] = milestones[i]?.departure?.vessel?.name ?? "";
-                legVesselObject["imo"] = milestones[i]?.departure?.vessel?.imo ?? "";
+                string prefix = $"leg{i + 1}";
+
+                legVesselObject["name"] = "";
+                legVesselObject["imo"] = "";
                 legVesselObject["id"] = "";
+                aggregatedJson[$"{prefix}_voyage"] = "";
+
+                if (i < milestones?.Length) {
+                    legVesselObject["name"] = milestones?[i]?.departure?.vessel?.name ?? "";
+                    legVesselObject["imo"] = milestones?[i]?.departure?.vessel?.imo ?? "";
+                    aggregatedJson[$"{prefix}_voyage"] = milestones?[i]?.departure?.voyage ?? "";
+                }
 
                 JObject legServiceObject = new JObject();
                 legServiceObject["id"] = "";
@@ -71,9 +80,7 @@ namespace TrackedShipmentsAPI.Services
                 legServiceObject["code"] = "";
                 legServiceObject["direction"] = "";
 
-                string prefix = $"leg{i + 1}";
                 aggregatedJson[$"{prefix}_vessel"] = legVesselObject;
-                aggregatedJson[$"{prefix}_voyage"] = milestones[i]?.departure?.voyage ?? "";
                 aggregatedJson[$"{prefix}_service"] = legServiceObject;
             }
 
@@ -190,12 +197,20 @@ namespace TrackedShipmentsAPI.Services
 
             JObject aggregatedTransshipmentsJson = new JObject();
 
-            for (int i = 0; i <= Math.Min(tspMilestones.Length - 1, 4); i++)
+            for (int i = 0; i <= Math.Max(tspMilestones.Length - 1, 4); i++)
             {
-                Milestone? currentIteratedMilestone = tspMilestones[i];
+                Milestone? currentIteratedMilestone = new Milestone();
 
-                Event? dischargeEvent = tspEvents.FirstOrDefault((item) => currentIteratedMilestone?.arrival?.vessel?.name == item.vessel?.name && item.description == DISCHARGE_AT_TSP);
-                Event? loadedEvent = tspEvents.FirstOrDefault((item) => currentIteratedMilestone?.departure?.vessel?.name == item.vessel?.name && item.description == LOADED_AT_TSP);
+                if (i < tspMilestones.Length)
+                {
+                    currentIteratedMilestone = tspMilestones[i];
+                }
+
+                string? currentVesselName = currentIteratedMilestone?.arrival?.vessel?.name;
+                string? currentVesselIMO = currentIteratedMilestone?.arrival?.vessel?.imo;
+
+                Event? dischargeEvent = tspEvents.FirstOrDefault((item) => ((currentVesselName != null && currentVesselName == item.vessel?.name) || (currentVesselIMO != null && currentVesselIMO == item.vessel?.imo)) && item.description == DISCHARGE_AT_TSP);
+                Event? loadedEvent = tspEvents.FirstOrDefault((item) => ((currentVesselName != null && currentVesselName == item.vessel?.name) || (currentVesselIMO != null && currentVesselIMO == item.vessel?.imo)) && item.description == LOADED_AT_TSP);
 
                 string prefix = $"tsp{i + 1}";
 

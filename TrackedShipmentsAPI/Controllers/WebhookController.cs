@@ -28,7 +28,7 @@ namespace TrackedShipmentsAPI.Controllers
                 string[] trackedShipmentIds = { trackedShipmentId };
                 var trackedShipmentsDataById = await _tsService.TrackedShipmentsByIds(trackedShipmentIds);
 
-                var enrichedData = _service.AddDataToJSON(trackedShipmentsDataById.data.trackedShipmentsByIds[0], sentAt);
+                var enrichedData = _service.AddDataToJSON(trackedShipmentsDataById?.data?.trackedShipmentsByIds?[0], sentAt);
                 var result = _service.JsonToXML(enrichedData);
 
                 var xmlString = result.OuterXml;
