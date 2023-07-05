@@ -158,7 +158,6 @@ namespace TrackedShipmentsAPI.Services
                                 }
                                 milestones {
                                     type
-                                    utcOffset
                                     port {
                                         properties {
                                             name
