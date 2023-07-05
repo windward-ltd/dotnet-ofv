@@ -1,11 +1,14 @@
 using TrackedShipmentsAPI.Models;
 using System.Text.Json;
+using System;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace TrackedShipmentsAPI.Services
 {
     public class TrackedShipmentsService
     {
         private readonly HttpClient _httpClient;
+        private static readonly IMemoryCache cache = new MemoryCache(new MemoryCacheOptions());
 
         public TrackedShipmentsService()
         {
@@ -49,9 +52,23 @@ namespace TrackedShipmentsAPI.Services
             return response?.data?.publicAPIToken ?? throw new Exception("Response data is null");
         }
 
+        public async Task<string> GetCachedToken()
+        {
+            string? token = cache?.Get("Token") as string;
+
+            if (token == null)
+            {
+                token = await CreateToken();
+
+                cache?.Set("Token", token, TimeSpan.FromHours(1));
+            }
+
+            return token;
+        }
+
         public async Task<dynamic> UpsertTrackedShipments(List<Dictionary<string, object?>> shipments)
         {
-            string token = await CreateToken();
+            string token = await GetCachedToken();
 
             string query = @"
                 mutation UpsertTrackedShipments($shipments: [TrackedShipmentInput!]!) {
@@ -88,7 +105,7 @@ namespace TrackedShipmentsAPI.Services
 
         public async Task<dynamic> TrackedShipmentsByIds(string[] trackedShipmentIds)
         {
-            string token = await CreateToken();
+            string token = await GetCachedToken();
 
             string currentQuery = @"
                 query TrackedShipmentsByIds($ids: [ObjectId!]!) {
@@ -141,7 +158,6 @@ namespace TrackedShipmentsAPI.Services
                                 }
                                 milestones {
                                     type
-                                    utcOffset
                                     port {
                                         properties {
                                             name
@@ -260,7 +276,7 @@ namespace TrackedShipmentsAPI.Services
         {
             try
             {
-                var token = await CreateToken();
+                var token = await GetCachedToken();
                 Console.WriteLine($"Token: {token}");
                 return token;
             }

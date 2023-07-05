@@ -44,6 +44,20 @@ namespace TrackedShipmentsAPI.Services
             { DELIVERY_TO_CONSIGNEE, "dlv_delivery" },
         };
 
+        public void MergeToMainJson(JObject mainJson, JObject jsonToMerge)
+        {
+            JObject parsedJson = JObject.Parse($@"
+            {{
+                ""Root"": {{
+                    ""container"": {{
+                        ""shipment"": {jsonToMerge.ToString()}
+                    }}
+                }}
+            }}");
+
+            mainJson.Merge(parsedJson);
+        }
+
         // Converts json object to XML
         public XmlDocument? JsonToXML(string jsonData)
         {
@@ -84,16 +98,7 @@ namespace TrackedShipmentsAPI.Services
                 aggregatedJson[$"{prefix}_voyage"] = currentIteratedMilestone?.departure?.voyage ?? "";
             }
 
-            JObject legsJson = JObject.Parse($@"
-            {{
-                ""Root"": {{
-                    ""container"": {{
-                        ""shipment"": {aggregatedJson.ToString()}
-                    }}
-                }}
-            }}");
-
-            json.Merge(legsJson); 
+            MergeToMainJson(json, aggregatedJson);
         }
 
         // Returns actual or estimated datetime of an event
@@ -122,16 +127,7 @@ namespace TrackedShipmentsAPI.Services
 
             aggregatedJson[$"{fieldsPrefix}_loc"] = itemObject;
 
-            JObject locJson = JObject.Parse($@"
-            {{
-                ""Root"": {{
-                    ""container"": {{
-                        ""shipment"": {aggregatedJson.ToString()}
-                    }}
-                }}
-            }}");
-
-            json.Merge(locJson);     
+            MergeToMainJson(json, aggregatedJson);     
         }
 
         // Adds all non TSP related events data regarding actual or estimated datetime to json
@@ -162,16 +158,7 @@ namespace TrackedShipmentsAPI.Services
                 AddLocData(json, matchingEventByKey?.port, prefix);
             }
             
-            JObject eventsJson = JObject.Parse($@"
-            {{
-                ""Root"": {{
-                    ""container"": {{
-                        ""shipment"": {aggregatedEventsJson.ToString()}
-                    }}
-                }}
-            }}");
-
-            json.Merge(eventsJson);
+            MergeToMainJson(json, aggregatedEventsJson);
         }
 
         public string? GetDateByActual(Timestamps? timestamps, bool actualField) {
@@ -235,16 +222,7 @@ namespace TrackedShipmentsAPI.Services
                 AddLocData(json, currentIteratedMilestone?.port, prefix);
             }
 
-            JObject eventsJson = JObject.Parse($@"
-            {{
-                ""Root"": {{
-                    ""container"": {{
-                        ""shipment"": {aggregatedTransshipmentsJson.ToString()}
-                    }}
-                }}
-            }}");
-
-            json.Merge(eventsJson); 
+            MergeToMainJson(json, aggregatedTransshipmentsJson);
         }
 
         // Aggregates the relevant data from all functions to the JSON
