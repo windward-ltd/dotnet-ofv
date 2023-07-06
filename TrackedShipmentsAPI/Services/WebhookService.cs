@@ -263,7 +263,6 @@ namespace TrackedShipmentsAPI.Services
 
             string? shipmentId = data?.shipment?.identifiers?.shipmentId;
 
-            // TODO - remove it for new data
             string? podVesselArrivalDetected = data?.shipments?.predicted?.code == ACTUAL_CODE ? data?.shipments?.predicted?.datetime : "";
 
             Milestone? podLocMilestone = milestones.FirstOrDefault((Milestone milestone) => milestone?.type == POD);
