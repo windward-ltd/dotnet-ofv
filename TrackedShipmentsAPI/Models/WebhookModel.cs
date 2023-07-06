@@ -35,6 +35,9 @@ namespace TrackedShipmentsAPI.Models
 
         [JsonProperty("carrier")]
         public Carrier? carrier { get; set; }
+
+        [JsonProperty("ISOEquipmentCode")]
+        public string? ISOEquipmentCode { get; set; }
     }
 
     public class Shipment
@@ -101,6 +104,21 @@ namespace TrackedShipmentsAPI.Models
 
         [JsonProperty("vessel")]
         public Vessel? vessel { get; set; }
+
+        [JsonProperty("vesselId")]
+        public string? vesselId { get; set; }
+    }
+
+    public class CarrierLatestStatus
+    {
+        [JsonProperty("status")]
+        public Status? status { get; set; }
+
+        [JsonProperty("voyage")]
+        public string? voyage { get; set; }
+
+        [JsonProperty("portId")]
+        public string? portId { get; set; }
 
         [JsonProperty("vesselId")]
         public string? vesselId { get; set; }
