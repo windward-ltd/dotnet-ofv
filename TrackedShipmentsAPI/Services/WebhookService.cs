@@ -95,7 +95,7 @@ namespace TrackedShipmentsAPI.Services
                     currentIteratedMilestone = milestones[i];
                 }
 
-                Vessel? currentDepartureVessel = currentIteratedMilestone?.departure?.vesselId != null ? vesselsDict[currentIteratedMilestone?.departure?.vesselId] : new Vessel();
+                Vessel? currentDepartureVessel = currentIteratedMilestone?.departure?.vesselId != null ? vesselsDict[currentIteratedMilestone?.departure?.vesselId ?? ""] : new Vessel();
                 
                 JObject legVesselObject = new JObject();
                 legVesselObject["name"] = currentDepartureVessel?.name ?? "";
@@ -172,7 +172,7 @@ namespace TrackedShipmentsAPI.Services
                     aggregatedEventsJson[$"pol_vsldeparture_planned_last"] = GetEventData(events, key, false);
                 }
 
-                Port? port = matchingEventByKey?.portId != null ? portsDict[matchingEventByKey?.portId] : new Port();
+                Port? port = matchingEventByKey?.portId != null ? portsDict[matchingEventByKey?.portId ?? ""] : new Port();
                 AddLocData(json, port, prefix);
             }
             
@@ -213,19 +213,19 @@ namespace TrackedShipmentsAPI.Services
                     currentIteratedMilestone = tspMilestones[i];
                 }
 
-                Port? currentMilestonePort = currentIteratedMilestone?.portId != null ? portsDict[currentIteratedMilestone?.portId] : new Port();
+                Port? currentMilestonePort = currentIteratedMilestone?.portId != null ? portsDict[currentIteratedMilestone?.portId ?? ""] : new Port();
 
-                Vessel? currentArrivalVessel = currentIteratedMilestone?.arrival?.vesselId != null ? vesselsDict[currentIteratedMilestone?.arrival?.vesselId] : new Vessel();
-                Vessel? currentDepartureVessel = currentIteratedMilestone?.departure?.vesselId != null ? vesselsDict[currentIteratedMilestone?.departure?.vesselId] : new Vessel();
+                Vessel? currentArrivalVessel = currentIteratedMilestone?.arrival?.vesselId != null ? vesselsDict[currentIteratedMilestone?.arrival?.vesselId ?? ""] : new Vessel();
+                Vessel? currentDepartureVessel = currentIteratedMilestone?.departure?.vesselId != null ? vesselsDict[currentIteratedMilestone?.departure?.vesselId ?? ""] : new Vessel();
 
                 Event? dischargeEvent = tspEvents.FirstOrDefault((item) => {
-                    Vessel? currentItemVessel = item?.vesselId != null ? vesselsDict[item?.vesselId] : new Vessel();
-                    return ((currentArrivalVessel?.name != null && currentArrivalVessel?.name == currentItemVessel?.name) || (currentArrivalVessel?.imo != null && currentArrivalVessel?.imo == currentItemVessel?.imo)) && item.description == DISCHARGE_AT_TSP;
+                    Vessel? currentItemVessel = item?.vesselId != null ? vesselsDict[item?.vesselId ?? ""] : new Vessel();
+                    return ((currentArrivalVessel?.name != null && currentArrivalVessel?.name == currentItemVessel?.name) || (currentArrivalVessel?.imo != null && currentArrivalVessel?.imo == currentItemVessel?.imo)) && item?.description == DISCHARGE_AT_TSP;
                 });
 
                 Event? loadedEvent = tspEvents.FirstOrDefault((item) => {
-                    Vessel? currentItemVessel = item?.vesselId != null ? vesselsDict[item?.vesselId] : new Vessel();
-                    return ((currentDepartureVessel?.name != null && currentDepartureVessel?.name == currentItemVessel?.name) || (currentDepartureVessel?.imo != null && currentDepartureVessel?.imo == currentItemVessel?.imo)) && item.description == DISCHARGE_AT_TSP;
+                    Vessel? currentItemVessel = item?.vesselId != null ? vesselsDict[item?.vesselId ?? ""] : new Vessel();
+                    return ((currentDepartureVessel?.name != null && currentDepartureVessel?.name == currentItemVessel?.name) || (currentDepartureVessel?.imo != null && currentDepartureVessel?.imo == currentItemVessel?.imo)) && item?.description == DISCHARGE_AT_TSP;
                 });
 
                 string prefix = $"tsp{i + 1}";
@@ -269,7 +269,7 @@ namespace TrackedShipmentsAPI.Services
             Milestone? polLocMilestone = milestones.FirstOrDefault((Milestone milestone) => milestone?.type == POL);
 
             CarrierLatestStatus? carrierLatestStatus = data?.shipment?.carrierLatestStatus?.ToObject<CarrierLatestStatus>();
-            Vessel? currentVessel = carrierLatestStatus?.vesselId != null ? vesselsDict[carrierLatestStatus?.vesselId] : new Vessel();
+            Vessel? currentVessel = carrierLatestStatus?.vesselId != null ? vesselsDict[carrierLatestStatus?.vesselId ?? ""] : new Vessel();
 
             // Parse the JSON structure
             JObject json = JObject.Parse($@"
@@ -359,8 +359,8 @@ namespace TrackedShipmentsAPI.Services
                 }}
             }}");
 
-            Port? polPort = polLocMilestone?.portId != null ? portsDict[polLocMilestone?.portId] : new Port();
-            Port? podPort = podLocMilestone?.portId != null ? portsDict[podLocMilestone?.portId] : new Port();
+            Port? polPort = polLocMilestone?.portId != null ? portsDict[polLocMilestone?.portId ?? ""] : new Port();
+            Port? podPort = podLocMilestone?.portId != null ? portsDict[podLocMilestone?.portId ?? ""] : new Port();
 
             AddLocData(json, polPort, "pol");
             AddLocData(json, podPort, "pod");

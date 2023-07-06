@@ -21,7 +21,7 @@ namespace TrackedShipmentsAPI.Controllers
         }
 
         [HttpPost("shipmentUpdate")]
-        public async Task<IActionResult> shipmentUpdate([FromBody] JsonElement webhook)
+        public IActionResult shipmentUpdate([FromBody] JsonElement webhook)
         {
             try
             {
