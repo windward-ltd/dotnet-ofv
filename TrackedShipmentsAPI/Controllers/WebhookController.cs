@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using TrackedShipmentsAPI.Services;
 using TrackedShipmentsAPI.Models;
 using System.Text.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace TrackedShipmentsAPI.Controllers
 {
@@ -23,12 +25,16 @@ namespace TrackedShipmentsAPI.Controllers
         {
             try
             {
+
+                dynamic webhookObject = JObject.Parse(webhook.GetRawText());
+
                 string trackedShipmentId = webhook.GetProperty("data").GetProperty("shipment").GetProperty("identifiers").GetProperty("trackedShipmentId").ToString();
+                
                 string sentAt = webhook.GetProperty("data").GetProperty("metadata").GetProperty("sentAt").ToString();
                 string[] trackedShipmentIds = { trackedShipmentId };
                 var trackedShipmentsDataById = await _tsService.TrackedShipmentsByIds(trackedShipmentIds);
 
-                var enrichedData = _service.AddDataToJSON(trackedShipmentsDataById?.data?.trackedShipmentsByIds?[0], sentAt);
+                var enrichedData = _service.AddDataToJSON(trackedShipmentsDataById?.data?.trackedShipmentsByIds?[0], sentAt, webhookObject?.data);
                 var result = _service.JsonToXML(enrichedData);
 
                 var xmlString = result.OuterXml;

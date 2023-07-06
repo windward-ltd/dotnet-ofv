@@ -20,10 +20,28 @@ namespace TrackedShipmentsAPI.Models
     {
         [JsonProperty("trackedShipmentId")]
         public string? trackedShipmentId { get; set; }
+
+        [JsonProperty("shipmentId")]
+        public string? shipmentId { get; set; }
+
+        [JsonProperty("containerNumber")]
+        public string? containerNumber { get; set; }
+
+        [JsonProperty("bolNumber")]
+        public string? bolNumber { get; set; }
+
+        [JsonProperty("carrierBookingReference")]
+        public string? carrierBookingReference { get; set; }
+
+        [JsonProperty("carrier")]
+        public Carrier? carrier { get; set; }
     }
 
     public class Shipment
     {
+        [JsonProperty("identifiers")]
+        public Identifiers? identifiers { get; set; }
+
         [JsonProperty("initialCarrierETA")]
         public string? initialCarrierETA { get; set; }
 
@@ -78,8 +96,14 @@ namespace TrackedShipmentsAPI.Models
         [JsonProperty("port")]
         public Port? port { get; set; }
 
+        [JsonProperty("portId")]
+        public string? portId { get; set; }
+
         [JsonProperty("vessel")]
         public Vessel? vessel { get; set; }
+
+        [JsonProperty("vesselId")]
+        public string? vesselId { get; set; }
     }
 
     public class Timestamps
@@ -95,6 +119,21 @@ namespace TrackedShipmentsAPI.Models
     {
         [JsonProperty("properties")]
         public Properties? properties { get; set; }
+
+        [JsonProperty("name")]
+        public string? name { get; set; }
+
+        [JsonProperty("locode")]
+        public string? locode { get; set; }
+
+        [JsonProperty("country")]
+        public string? country { get; set; }
+
+        [JsonProperty("timezone")]
+        public string? timezone { get; set; }
+
+        [JsonProperty("coordinates")]
+        public string[]? coordinates { get; set; }
     }
 
     public class Properties
@@ -144,6 +183,9 @@ namespace TrackedShipmentsAPI.Models
         [JsonProperty("port")]
         public Port? port { get; set; }
 
+        [JsonProperty("portId")]
+        public string? portId { get; set; }
+
         [JsonProperty("type")]
         public string? type { get; set; }
 
@@ -164,6 +206,9 @@ namespace TrackedShipmentsAPI.Models
 
         [JsonProperty("vessel")]
         public Vessel? vessel { get; set; }
+
+        [JsonProperty("vesselId")]
+        public string? vesselId { get; set; }
 
         [JsonProperty("timestamps")]
         public MilestoneScheduleTimestamps? timestamps { get; set; }

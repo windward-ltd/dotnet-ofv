@@ -4,6 +4,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using TrackedShipmentsAPI.Models;
+using System.Text.Json;
 
 
 namespace TrackedShipmentsAPI.Services
@@ -64,6 +65,19 @@ namespace TrackedShipmentsAPI.Services
             XmlDocument? doc = JsonConvert.DeserializeXmlNode(jsonData);
 
             return doc;
+        }
+
+        public Dictionary<string, JObject> CreateDictionaryFromJson(dynamic arrayElement, string keyName)
+        {
+            Dictionary<string, JObject> dictionary = new Dictionary<string, JObject>();
+
+            foreach (JObject element in arrayElement)
+            {
+                string keyId = element[keyName].ToString();
+                dictionary[keyId] = element;
+            }
+
+            return dictionary;
         }
 
         // Creates all leg data of at least 5 first legs (some can be empty if no data) to adhere to data structure
@@ -130,8 +144,29 @@ namespace TrackedShipmentsAPI.Services
             MergeToMainJson(json, aggregatedJson);     
         }
 
+        public void NewAddLocData(JObject json, dynamic? port, string fieldsPrefix)
+        {
+            JObject itemObject = new JObject();
+            JObject aggregatedJson = new JObject();
+
+            itemObject["name"] = port?.name ?? "";
+            itemObject["locode"] = port?.locode ?? "";
+            itemObject["timezone"] = port?.timezone ?? "";
+            itemObject["latitude"] = port?.coordinates?[1] ?? "";
+            itemObject["longitude"] = port?.coordinates?[0] ?? "";
+            itemObject["city"] = "";
+            itemObject["state"] = "";
+            itemObject["country"] = port?.country ?? "";
+            itemObject["country_iso2"] = "";
+            itemObject["country_iso3"] = "";
+
+            aggregatedJson[$"{fieldsPrefix}_loc"] = itemObject;
+
+            MergeToMainJson(json, aggregatedJson);     
+        }
+
         // Adds all non TSP related events data regarding actual or estimated datetime to json
-        public void AddEventsData(JObject json, Event[] events)
+        public void AddEventsData(JObject json, Event[] events, Dictionary<string, JObject> portsDict)
         {
             Event[] filteredEvents = events
                 .Where((item) => item?.description != DISCHARGE_AT_TSP && item?.description != DEPARTURE_FROM_TSP && item?.description != LOADED_AT_TSP)
@@ -155,7 +190,8 @@ namespace TrackedShipmentsAPI.Services
                     aggregatedEventsJson[$"pol_vsldeparture_planned_last"] = GetEventData(events, key, false);
                 }
 
-                AddLocData(json, matchingEventByKey?.port, prefix);
+                JObject port = matchingEventByKey?.portId != null ? portsDict[matchingEventByKey?.portId] : new JObject();
+                NewAddLocData(json, port, prefix);
             }
             
             MergeToMainJson(json, aggregatedEventsJson);
@@ -172,7 +208,7 @@ namespace TrackedShipmentsAPI.Services
             return isActual ? "" : datetime;
         }
 
-        public void AddTransshipmentsData(JObject json, Milestone[] milestones, Event[] events)
+        public void AddTransshipmentsData(JObject json, Milestone[] milestones, Event[] events, Dictionary<string, JObject> portsDict, Dictionary<string, JObject> vesselsDict)
         {
             Milestone[] tspMilestones = milestones
                 .Where((item) => item.type == TSP)
@@ -195,11 +231,20 @@ namespace TrackedShipmentsAPI.Services
                     currentIteratedMilestone = tspMilestones[i];
                 }
 
-                Vessel? currentArrivalVessel = currentIteratedMilestone?.arrival?.vessel;
-                Vessel? currentDepartureVessel = currentIteratedMilestone?.departure?.vessel;
+                dynamic? currentMilestonePort = currentIteratedMilestone?.portId != null ? portsDict[currentIteratedMilestone?.portId] : new JObject();
 
-                Event? dischargeEvent = tspEvents.FirstOrDefault((item) => ((currentArrivalVessel?.name != null && currentArrivalVessel?.name == item.vessel?.name) || (currentArrivalVessel?.imo != null && currentArrivalVessel?.imo == item.vessel?.imo)) && item.description == DISCHARGE_AT_TSP);
-                Event? loadedEvent = tspEvents.FirstOrDefault((item) => ((currentDepartureVessel?.name != null && currentDepartureVessel?.name == item.vessel?.name) || (currentDepartureVessel?.imo != null && currentDepartureVessel?.imo == item.vessel?.imo)) && item.description == LOADED_AT_TSP);
+                dynamic? currentArrivalVessel = currentIteratedMilestone?.arrival?.vesselId != null ? vesselsDict[currentIteratedMilestone?.arrival?.vesselId] : new JObject();
+                dynamic? currentDepartureVessel = currentIteratedMilestone?.departure?.vesselId != null ? vesselsDict[currentIteratedMilestone?.departure?.vesselId] : new JObject();
+
+                Event? dischargeEvent = tspEvents.FirstOrDefault((item) => {
+                    dynamic? currentItemVessel = item?.vesselId != null ? vesselsDict[item?.vesselId] : new JObject();
+                    return ((currentArrivalVessel?.name != null && currentArrivalVessel?.name == currentItemVessel?.name) || (currentArrivalVessel?.imo != null && currentArrivalVessel?.imo == currentItemVessel?.imo)) && item.description == DISCHARGE_AT_TSP;
+                });
+
+                Event? loadedEvent = tspEvents.FirstOrDefault((item) => {
+                    dynamic? currentItemVessel = item?.vesselId != null ? vesselsDict[item?.vesselId] : new JObject();
+                    return ((currentDepartureVessel?.name != null && currentDepartureVessel?.name == currentItemVessel?.name) || (currentDepartureVessel?.imo != null && currentDepartureVessel?.imo == currentItemVessel?.imo)) && item.description == DISCHARGE_AT_TSP;
+                });
 
                 string prefix = $"tsp{i + 1}";
 
@@ -219,24 +264,30 @@ namespace TrackedShipmentsAPI.Services
                 aggregatedTransshipmentsJson[$"{prefix}_vsldeparture_actual"] = GetDateByActual(currentIteratedMilestone?.departure?.timestamps?.carrier, true);
                 aggregatedTransshipmentsJson[$"{prefix}_vsldeparture_detected"] = GetDateByActual(currentIteratedMilestone?.departure?.timestamps?.predicted, true);
 
-                AddLocData(json, currentIteratedMilestone?.port, prefix);
+                NewAddLocData(json, currentMilestonePort, prefix);
             }
 
             MergeToMainJson(json, aggregatedTransshipmentsJson);
         }
 
         // Aggregates the relevant data from all functions to the JSON
-        public string AddDataToJSON(dynamic data, string sentAt)
+        public string AddDataToJSON(dynamic data, string sentAt, dynamic newData)
         {
             Event[] events = data?.shipment?.status?.events?.ToObject<Event[]>() ?? new Event[1];
             Milestone[] milestones = data?.shipment?.status?.milestones?.ToObject<Milestone[]>() ?? new Milestone[1];
 
-            string? shipmentId = data?.shipment?.id;
+            Event[] newEvents = newData?.shipment?.events?.ToObject<Event[]>() ?? new Event[1];
+            Milestone[] newMilestones = newData?.shipment?.milestones?.ToObject<Milestone[]>() ?? new Milestone[1];
+
+            Dictionary<string, JObject> portsDict = CreateDictionaryFromJson(newData?.shipment?.ports, "portId");
+            Dictionary<string, JObject> vesselsDict = CreateDictionaryFromJson(newData?.shipment?.vessels, "vesselId");
+
+            string? shipmentId = newData?.shipment?.identifiers?.shipmentId ?? data?.shipment?.id;
 
             string? podVesselArrivalDetected = data?.shipments?.status?.predicted?.code == ACTUAL_CODE ? data?.shipments?.status?.predicted?.datetime : "";
 
-            Milestone? podLocMilestone = milestones.FirstOrDefault((Milestone milestone) => milestone?.type == POD);
-            Milestone? polLocMilestone = milestones.FirstOrDefault((Milestone milestone) => milestone?.type == POL);
+            Milestone? podLocMilestone = newMilestones.FirstOrDefault((Milestone milestone) => milestone?.type == POD);
+            Milestone? polLocMilestone = newMilestones.FirstOrDefault((Milestone milestone) => milestone?.type == POL);
 
             Vessel? currentVessel = data?.shipment?.status?.currentEvent?.vessel;
 
@@ -328,12 +379,16 @@ namespace TrackedShipmentsAPI.Services
                 }}
             }}");
 
-            AddLocData(json, polLocMilestone?.port, "pol");
-            AddLocData(json, podLocMilestone?.port, "pod");
-            AddLocData(json, null, "dlv");
-            AddEventsData(json, events);
+            JObject polPort = polLocMilestone?.portId != null ? portsDict[polLocMilestone?.portId] : new JObject();
+            JObject podPort = podLocMilestone?.portId != null ? portsDict[podLocMilestone?.portId] : new JObject();
+            NewAddLocData(json, polPort, "pol");
+            NewAddLocData(json, podPort, "pod");
+            // Using webhook data - done
+            NewAddLocData(json, null, "dlv");
+            // Using webhook data - done
+            AddEventsData(json, newEvents, portsDict);
             AddLegsData(json, milestones);
-            AddTransshipmentsData(json, milestones, events);
+            AddTransshipmentsData(json, newMilestones, newEvents, portsDict, vesselsDict);
 
             // Convert the updated JSON structure back to a string
             string updatedJson = json.ToString();
