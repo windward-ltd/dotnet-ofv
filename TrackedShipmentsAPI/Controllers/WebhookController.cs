@@ -25,7 +25,6 @@ namespace TrackedShipmentsAPI.Controllers
         {
             try
             {
-
                 dynamic? webhookObject = JObject.Parse(webhook.GetRawText());
 
                 string? sentAt = webhookObject?.data?.metadata?.sentAt;

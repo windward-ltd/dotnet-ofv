@@ -319,7 +319,7 @@ namespace TrackedShipmentsAPI.Services
                                 ""type"": """",
                                 ""reference_number"": """"
                             }},
-                            ""booking_number"": ""{data?.shipment?.identifiers?.carrierBookingRefernce}"",
+                            ""booking_number"": ""{data?.shipment?.identifiers?.carrierBookingReference}"",
                             ""bl_number"": ""{data?.shipment?.identifiers?.bolNumber}"",
                             ""weight"": """",
                             ""status"": """",
