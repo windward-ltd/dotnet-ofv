@@ -5,39 +5,10 @@ namespace TrackedShipmentsAPI.Models
     public class WebhookModel
     {
         [JsonProperty("data")]
-        public WebhookShipment? shipment { get; set; }
+        public Shipment? shipment { get; set; }
 
         [JsonProperty("metadata")]
         public Metadata? metadata { get; set; }
-    }
-
-    public class WebhookShipment {
-        [JsonProperty("identifiers")]
-        public Identifiers? identifiers { get; set; }
-    }
-
-    public class Identifiers
-    {
-        [JsonProperty("trackedShipmentId")]
-        public string? trackedShipmentId { get; set; }
-
-        [JsonProperty("shipmentId")]
-        public string? shipmentId { get; set; }
-
-        [JsonProperty("containerNumber")]
-        public string? containerNumber { get; set; }
-
-        [JsonProperty("bolNumber")]
-        public string? bolNumber { get; set; }
-
-        [JsonProperty("carrierBookingReference")]
-        public string? carrierBookingReference { get; set; }
-
-        [JsonProperty("carrier")]
-        public Carrier? carrier { get; set; }
-
-        [JsonProperty("ISOEquipmentCode")]
-        public string? ISOEquipmentCode { get; set; }
     }
 
     public class Shipment
@@ -67,6 +38,39 @@ namespace TrackedShipmentsAPI.Models
         public List<Port>? ports { get; set; }
     }
 
+    public class Metadata
+    {
+        [JsonProperty("sentAt")]
+        public string? SentAt { get; set; }
+
+        [JsonProperty("businessData")]
+        public object? BusinessData { get; set; }
+    }
+
+    public class Identifiers
+    {
+        [JsonProperty("trackedShipmentId")]
+        public string? trackedShipmentId { get; set; }
+
+        [JsonProperty("shipmentId")]
+        public string? shipmentId { get; set; }
+
+        [JsonProperty("containerNumber")]
+        public string? containerNumber { get; set; }
+
+        [JsonProperty("bolNumber")]
+        public string? bolNumber { get; set; }
+
+        [JsonProperty("carrierBookingReference")]
+        public string? carrierBookingReference { get; set; }
+
+        [JsonProperty("carrier")]
+        public Carrier? carrier { get; set; }
+
+        [JsonProperty("ISOEquipmentCode")]
+        public string? ISOEquipmentCode { get; set; }
+    }
+
     public class Carrier
     {
         [JsonProperty("SCAC")]
@@ -83,9 +87,6 @@ namespace TrackedShipmentsAPI.Models
 
         [JsonProperty("type")]
         public string? type { get; set; }
-
-        [JsonProperty("currentEvent")]
-        public Event? currentEvent { get; set; }
     }
 
     public class Event
@@ -96,14 +97,8 @@ namespace TrackedShipmentsAPI.Models
         [JsonProperty("timestamps")]
         public Timestamps? timestamps { get; set; }
 
-        [JsonProperty("port")]
-        public Port? port { get; set; }
-
         [JsonProperty("portId")]
         public string? portId { get; set; }
-
-        [JsonProperty("vessel")]
-        public Vessel? vessel { get; set; }
 
         [JsonProperty("vesselId")]
         public string? vesselId { get; set; }
@@ -135,9 +130,6 @@ namespace TrackedShipmentsAPI.Models
 
     public class Port
     {
-        [JsonProperty("properties")]
-        public Properties? properties { get; set; }
-
         [JsonProperty("name")]
         public string? name { get; set; }
 
@@ -149,39 +141,6 @@ namespace TrackedShipmentsAPI.Models
 
         [JsonProperty("timezone")]
         public string? timezone { get; set; }
-
-        [JsonProperty("coordinates")]
-        public string[]? coordinates { get; set; }
-    }
-
-    public class Properties
-    {
-        [JsonProperty("name")]
-        public string? name { get; set; }
-
-        [JsonProperty("locode")]
-        public string? locode { get; set; }
-
-        [JsonProperty("country")]
-        public string? country { get; set; }
-
-        [JsonProperty("timezone")]
-        public string? timezone { get; set; }
-
-        [JsonProperty("centroid")]
-        public Centroid? centroid { get; set; }
-    }
-
-    public class Centroid
-    {
-        [JsonProperty("geometry")]
-        public Geometry? geometry { get; set; }
-    }
-
-    public class Geometry
-    {
-        [JsonProperty("type")]
-        public string? type { get; set; }
 
         [JsonProperty("coordinates")]
         public string[]? coordinates { get; set; }
@@ -198,9 +157,6 @@ namespace TrackedShipmentsAPI.Models
 
     public class Milestone
     {
-        [JsonProperty("port")]
-        public Port? port { get; set; }
-
         [JsonProperty("portId")]
         public string? portId { get; set; }
 
@@ -222,9 +178,6 @@ namespace TrackedShipmentsAPI.Models
         [JsonProperty("voyage")]
         public string? voyage { get; set; }
 
-        [JsonProperty("vessel")]
-        public Vessel? vessel { get; set; }
-
         [JsonProperty("vesselId")]
         public string? vesselId { get; set; }
 
@@ -245,14 +198,5 @@ namespace TrackedShipmentsAPI.Models
     {
         [JsonProperty("diffFromInitialCarrierDays")]
         public int? diffFromInitialCarrierDays { get; set; }
-    }
-
-    public class Metadata
-    {
-        [JsonProperty("sentAt")]
-        public string? SentAt { get; set; }
-
-        [JsonProperty("businessData")]
-        public object? BusinessData { get; set; }
     }
 }

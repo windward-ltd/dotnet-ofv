@@ -271,6 +271,9 @@ namespace TrackedShipmentsAPI.Services
             CarrierLatestStatus? carrierLatestStatus = data?.shipment?.carrierLatestStatus?.ToObject<CarrierLatestStatus>();
             Vessel? currentVessel = carrierLatestStatus?.vesselId != null ? vesselsDict[carrierLatestStatus?.vesselId ?? ""] : new Vessel();
 
+            string? podVesselArrivalPlannedLast = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, false);
+            string? podVesselArrivalActual = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, true);
+
             // Parse the JSON structure
             JObject json = JObject.Parse($@"
             {{
@@ -330,8 +333,8 @@ namespace TrackedShipmentsAPI.Services
                             ""pol_vsldeparture_actual"": ""{polLocMilestone?.departure?.timestamps?.carrier?.datetime ?? ""}"",
                             ""pol_vsldeparture_detected"": ""{polLocMilestone?.departure?.timestamps?.predicted?.datetime ?? ""}"",
                             ""pod_vslarrival_planned_initial"": ""{data?.shipment?.initialCarrierETA}"",
-                            ""pod_vslarrival_planned_last"": ""{podLocMilestone?.departure?.timestamps?.predicted?.datetime}"",
-                            ""pod_vslarrival_actual"": ""{podLocMilestone?.departure?.timestamps?.carrier?.datetime}"",
+                            ""pod_vslarrival_planned_last"": ""{podVesselArrivalPlannedLast}"",
+                            ""pod_vslarrival_actual"": ""{podVesselArrivalActual}"",
                             ""pod_vslarrival_detected"": ""{podVesselArrivalDetected}"",
                             ""pod_vslarrival_prediction"": """",
                             ""pod_discharge_prediction"": """",
