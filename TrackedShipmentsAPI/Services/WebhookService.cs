@@ -320,7 +320,7 @@ namespace TrackedShipmentsAPI.Services
                             ""availability_loc"": """",
                             ""identifiers"": {{
                                 ""type"": """",
-                                ""reference_number"": """"
+                                ""reference_number"": ""{data?.metadata?.jobNumber}""
                             }},
                             ""booking_number"": ""{data?.shipment?.identifiers?.carrierBookingReference}"",
                             ""bl_number"": ""{data?.shipment?.identifiers?.bolNumber}"",

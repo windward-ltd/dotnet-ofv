@@ -41,10 +41,13 @@ namespace TrackedShipmentsAPI.Models
     public class Metadata
     {
         [JsonProperty("sentAt")]
-        public string? SentAt { get; set; }
+        public string? sentAt { get; set; }
 
         [JsonProperty("businessData")]
-        public object? BusinessData { get; set; }
+        public object? businessData { get; set; }
+        
+        [JsonProperty("jobNumber")]
+        public string? jobNumber { get; set; }
     }
 
     public class Identifiers
