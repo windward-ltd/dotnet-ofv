@@ -2,6 +2,8 @@ using TrackedShipmentsAPI.Models;
 using System.Text.Json;
 using System;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace TrackedShipmentsAPI.Services
 {
@@ -25,6 +27,13 @@ namespace TrackedShipmentsAPI.Services
                 { "clientId", "" },
                 { "clientSecret", "" }
             };
+        }
+
+        public JwtSecurityToken DecodeJwtToken(string jwtToken)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtSecurityToken = tokenHandler.ReadJwtToken(jwtToken);
+            return jwtSecurityToken;
         }
 
         private async Task<string> CreateToken()
@@ -59,8 +68,25 @@ namespace TrackedShipmentsAPI.Services
             if (token == null)
             {
                 token = await CreateToken();
+                JwtSecurityToken decodedToken = DecodeJwtToken(token);
 
-                cache?.Set("Token", token, TimeSpan.FromHours(1));
+                if (decodedToken != null) {
+                    var claims = decodedToken.Claims;
+
+                    string? issuedAt = claims.FirstOrDefault(c => c.Type == "iat")?.Value;
+                    string? expiration = claims.FirstOrDefault(c => c.Type == "exp")?.Value;
+
+                    if (issuedAt != null && expiration != null)
+                    {
+                        var issuedAtTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(issuedAt));
+                        var expirationTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(expiration));
+
+                        var tokenLifetime = expirationTime - issuedAtTime;
+                        var cacheExpiration = tokenLifetime.Subtract(TimeSpan.FromMinutes(2)); // Set cache expiration to token lifetime minus buffer of 2 minutes
+
+                        cache?.Set("Token", token, cacheExpiration);
+                    }
+                }
             }
 
             return token;
