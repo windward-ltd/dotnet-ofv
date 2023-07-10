@@ -73,16 +73,14 @@ namespace TrackedShipmentsAPI.Services
                 if (decodedToken != null) {
                     var claims = decodedToken.Claims;
 
-                    string? issuedAt = claims.FirstOrDefault(c => c.Type == "iat")?.Value;
                     string? expiration = claims.FirstOrDefault(c => c.Type == "exp")?.Value;
 
-                    if (issuedAt != null && expiration != null)
+                    if (expiration != null)
                     {
-                        var issuedAtTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(issuedAt));
-                        var expirationTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(expiration));
+                        var expirationDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(expiration));
+                        var tokenLifetime = expirationDate - DateTimeOffset.Now;
 
-                        var tokenLifetime = expirationTime - issuedAtTime;
-                        var cacheExpiration = tokenLifetime.Subtract(TimeSpan.FromMinutes(2)); // Set cache expiration to token lifetime minus buffer of 2 minutes
+                        var cacheExpiration = tokenLifetime.Subtract(TimeSpan.FromMinutes(1)); // Set cache expiration to token lifetime minus buffer of 1 minutes
 
                         cache?.Set("Token", token, cacheExpiration);
                     }
