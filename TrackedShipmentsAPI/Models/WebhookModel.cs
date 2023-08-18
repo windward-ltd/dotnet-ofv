@@ -133,6 +133,9 @@ namespace TrackedShipmentsAPI.Models
 
     public class Port
     {
+        [JsonProperty("portId")]
+        public string? portId { get; set; }
+
         [JsonProperty("name")]
         public string? name { get; set; }
 
@@ -151,6 +154,9 @@ namespace TrackedShipmentsAPI.Models
 
     public class Vessel
     {
+        [JsonProperty("vesselId")]
+        public string? vesselId { get; set; }
+
         [JsonProperty("name")]
         public string? name { get; set; }
 

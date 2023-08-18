@@ -252,6 +252,25 @@ namespace TrackedShipmentsAPI.Services
             MergeToMainJson(json, aggregatedTransshipmentsJson);
         }
 
+        public Milestone? GetNextMilestone(Milestone[]? milestones, Port? currentPort) {
+            Milestone? currentMilestone = milestones.FirstOrDefault((Milestone milestone) => currentPort?.portId != null && milestone?.portId == currentPort?.portId);
+
+            int currentMilestoneIndex = -2;
+
+            for (int i = 0; i < milestones.Length; i++)
+            {
+                if (milestones[i].Equals(currentMilestone))
+                {
+                    currentMilestoneIndex = i;
+                    break;
+                }
+            }
+
+            Milestone? nextMilestone = milestones?[currentMilestoneIndex + 1];
+
+            return nextMilestone;
+        }
+
         // Aggregates the relevant data from all functions to the JSON
         public string AddDataToJSON(dynamic data, string sentAt)
         {
@@ -270,6 +289,10 @@ namespace TrackedShipmentsAPI.Services
 
             CarrierLatestStatus? carrierLatestStatus = data?.shipment?.carrierLatestStatus?.ToObject<CarrierLatestStatus>();
             Vessel? currentVessel = carrierLatestStatus?.vesselId != null ? vesselsDict[carrierLatestStatus?.vesselId ?? ""] : new Vessel();
+            Port? currentPort = carrierLatestStatus?.portId != null ? portsDict[carrierLatestStatus?.portId ?? ""] : new Port();
+
+            Milestone? nextMilestone = GetNextMilestone(milestones, currentPort);
+            Port? nextPort = nextMilestone != null ? portsDict[nextMilestone?.portId] : new Port();
 
             string? podVesselArrivalPlannedLast = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, false);
             string? podVesselArrivalActual = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, true);
@@ -299,9 +322,22 @@ namespace TrackedShipmentsAPI.Services
                             ""id"": ""{shipmentId ?? ""}"",
                             ""shipmentsubscription_status"": """",
                             ""status_verbose"": """",
-                            ""current_vessel_nextport"": """",
-                            ""current_vessel_position"": """",
-                            ""current_vessel"": ""{currentVessel?.name ?? ""}"",
+                            ""current_vessel_nextport"": {{
+                                 ""name"": ""{nextPort?.name}"",
+                                 ""locode"": ""{nextPort?.locode}"",
+                                 ""eta"": ""{GetDateByActual(nextMilestone?.arrival?.timestamps?.predicted, false) ?? GetDateByActual(nextMilestone?.arrival?.timestamps?.carrier, false)}"",
+                            }},
+                            ""current_vessel_position"": {{
+                                ""latitude"": ""{currentPort?.coordinates?[1]}"",
+                                ""longitude"": ""{currentPort?.coordinates?[0]}"",
+                                ""timestamp"": """",
+                                ""heading"": """",
+                            }},
+                            ""current_vessel"": {{
+                                ""name"": ""{currentVessel?.name ?? ""}"",
+                                ""imo"": ""{currentVessel?.imo ?? ""}"",
+                                ""id"": ""{currentVessel?.vesselId ?? ""}"",
+                            }},
                             ""container_type_iso"": ""{data?.shipment?.identifiers?.ISOEquipmentCode ?? ""}"",
                             ""container_type_str"": """",
                             ""shipmentsubscription_status_verbose"": """",
