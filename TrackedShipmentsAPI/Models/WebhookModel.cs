@@ -120,6 +120,9 @@ namespace TrackedShipmentsAPI.Models
 
         [JsonProperty("vesselId")]
         public string? vesselId { get; set; }
+
+        [JsonProperty("timestamps")]
+        public Timestamps? timestamps { get; set; }
     }
 
     public class Timestamps

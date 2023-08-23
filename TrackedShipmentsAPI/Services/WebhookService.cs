@@ -321,7 +321,7 @@ namespace TrackedShipmentsAPI.Services
                         ""shipment"": {{
                             ""id"": ""{shipmentId ?? ""}"",
                             ""shipmentsubscription_status"": """",
-                            ""status_verbose"": """",
+                            ""status_verbose"": ""{carrierLatestStatus?.status?.description}"",
                             ""current_vessel_nextport"": {{
                                  ""name"": ""{nextPort?.name}"",
                                  ""locode"": ""{nextPort?.locode}"",
@@ -363,7 +363,7 @@ namespace TrackedShipmentsAPI.Services
                             ""weight"": """",
                             ""status"": """",
                             ""lifecycle_status"": """",
-                            ""id_date"": """",
+                            ""id_date"": ""{carrierLatestStatus?.timestamps?.datetime}"",
                             ""pol_vsldeparture_planned_initial"": ""{data?.shipment?.initialCarrierETD}"",
                             ""pol_vsldeparture_planned_last"": """",
                             ""pol_vsldeparture_actual"": ""{polLocMilestone?.departure?.timestamps?.carrier?.datetime ?? ""}"",
