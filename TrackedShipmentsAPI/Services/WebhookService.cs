@@ -343,7 +343,7 @@ namespace TrackedShipmentsAPI.Services
                             ""weight"": """",
                             ""status"": """",
                             ""lifecycle_status"": """",
-                            ""id_date"": ""{carrierLatestStatus?.timestamps?.datetime}"",
+                            ""id_date"": ""{carrierLatestStatus?.timestamps?.datetime ?? ""}"",
                             ""pol_vsldeparture_planned_initial"": ""{data?.shipment?.initialCarrierETD}"",
                             ""pol_vsldeparture_planned_last"": """",
                             ""pol_vsldeparture_actual"": ""{polLocMilestone?.departure?.timestamps?.carrier?.datetime ?? ""}"",
