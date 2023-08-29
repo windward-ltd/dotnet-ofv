@@ -134,8 +134,8 @@ namespace TrackedShipmentsAPI.Services
             itemObject["name"] = port?.name ?? "";
             itemObject["locode"] = port?.locode ?? "";
             itemObject["timezone"] = port?.timezone ?? "";
-            itemObject["latitude"] = port?.coordinates?[1] ?? "";
-            itemObject["longitude"] = port?.coordinates?[0] ?? "";
+            itemObject["latitude"] = port?.coordinates?[1] ?? null;
+            itemObject["longitude"] = port?.coordinates?[0] ?? null;
             itemObject["city"] = "";
             itemObject["state"] = "";
             itemObject["country"] = port?.country ?? "";
@@ -252,25 +252,6 @@ namespace TrackedShipmentsAPI.Services
             MergeToMainJson(json, aggregatedTransshipmentsJson);
         }
 
-        public Milestone? GetNextMilestone(Milestone[]? milestones, Port? currentPort) {
-            Milestone? currentMilestone = milestones.FirstOrDefault((Milestone milestone) => currentPort?.portId != null && milestone?.portId == currentPort?.portId);
-
-            int currentMilestoneIndex = -2;
-
-            for (int i = 0; i < milestones.Length; i++)
-            {
-                if (milestones[i].Equals(currentMilestone))
-                {
-                    currentMilestoneIndex = i;
-                    break;
-                }
-            }
-
-            Milestone? nextMilestone = milestones?[currentMilestoneIndex + 1];
-
-            return nextMilestone;
-        }
-
         // Aggregates the relevant data from all functions to the JSON
         public string AddDataToJSON(dynamic data, string sentAt)
         {
@@ -289,10 +270,9 @@ namespace TrackedShipmentsAPI.Services
 
             CarrierLatestStatus? carrierLatestStatus = data?.shipment?.carrierLatestStatus?.ToObject<CarrierLatestStatus>();
             Vessel? currentVessel = carrierLatestStatus?.vesselId != null ? vesselsDict[carrierLatestStatus?.vesselId ?? ""] : new Vessel();
-            Port? currentPort = carrierLatestStatus?.portId != null ? portsDict[carrierLatestStatus?.portId ?? ""] : new Port();
 
-            Milestone? nextMilestone = GetNextMilestone(milestones, currentPort);
-            Port? nextPort = nextMilestone != null ? portsDict[nextMilestone?.portId] : new Port();
+            Milestone? nextMilestone = milestones.FirstOrDefault((Milestone milestone) => milestone?.arrival?.timestamps?.carrier?.datetime != null && milestone?.arrival?.timestamps?.carrier?.code == PLANNED_CODE);
+            Port? nextPort = currentVessel != null & nextMilestone?.arrival?.vesselId == currentVessel?.vesselId ? portsDict[nextMilestone?.portId ?? ""] : new Port();
 
             string? podVesselArrivalPlannedLast = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, false);
             string? podVesselArrivalActual = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, true);
@@ -328,10 +308,10 @@ namespace TrackedShipmentsAPI.Services
                                  ""eta"": ""{GetDateByActual(nextMilestone?.arrival?.timestamps?.predicted, false) ?? GetDateByActual(nextMilestone?.arrival?.timestamps?.carrier, false)}"",
                             }},
                             ""current_vessel_position"": {{
-                                ""latitude"": ""{currentPort?.coordinates?[1]}"",
-                                ""longitude"": ""{currentPort?.coordinates?[0]}"",
-                                ""timestamp"": """",
-                                ""heading"": """",
+                                ""latitude"": ""{currentVessel?.lastPosition?.coordinates?[1]}"",
+                                ""longitude"": ""{currentVessel?.lastPosition?.coordinates?[0]}"",
+                                ""timestamp"": ""{currentVessel?.lastPosition?.datetime}"",
+                                ""heading"": ""{currentVessel?.lastPosition?.course}"",
                             }},
                             ""current_vessel"": {{
                                 ""name"": ""{currentVessel?.name ?? ""}"",
