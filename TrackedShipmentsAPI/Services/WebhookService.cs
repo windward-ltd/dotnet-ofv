@@ -134,8 +134,8 @@ namespace TrackedShipmentsAPI.Services
             itemObject["name"] = port?.name ?? "";
             itemObject["locode"] = port?.locode ?? "";
             itemObject["timezone"] = port?.timezone ?? "";
-            itemObject["latitude"] = port?.coordinates?[1] ?? "";
-            itemObject["longitude"] = port?.coordinates?[0] ?? "";
+            itemObject["latitude"] = port?.coordinates?[1] ?? null;
+            itemObject["longitude"] = port?.coordinates?[0] ?? null;
             itemObject["city"] = "";
             itemObject["state"] = "";
             itemObject["country"] = port?.country ?? "";
@@ -271,6 +271,9 @@ namespace TrackedShipmentsAPI.Services
             CarrierLatestStatus? carrierLatestStatus = data?.shipment?.carrierLatestStatus?.ToObject<CarrierLatestStatus>();
             Vessel? currentVessel = carrierLatestStatus?.vesselId != null ? vesselsDict[carrierLatestStatus?.vesselId ?? ""] : new Vessel();
 
+            Milestone? nextMilestone = milestones.FirstOrDefault((Milestone milestone) => milestone?.arrival?.timestamps?.carrier?.datetime != null && milestone?.arrival?.timestamps?.carrier?.code == PLANNED_CODE);
+            Port? nextPort = currentVessel != null & nextMilestone?.arrival?.vesselId == currentVessel?.vesselId ? portsDict[nextMilestone?.portId ?? ""] : new Port();
+
             string? podVesselArrivalPlannedLast = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, false);
             string? podVesselArrivalActual = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, true);
 
@@ -298,10 +301,23 @@ namespace TrackedShipmentsAPI.Services
                         ""shipment"": {{
                             ""id"": ""{shipmentId ?? ""}"",
                             ""shipmentsubscription_status"": """",
-                            ""status_verbose"": """",
-                            ""current_vessel_nextport"": """",
-                            ""current_vessel_position"": """",
-                            ""current_vessel"": ""{currentVessel?.name ?? ""}"",
+                            ""status_verbose"": ""{carrierLatestStatus?.status?.description}"",
+                            ""current_vessel_nextport"": {{
+                                 ""name"": ""{nextPort?.name}"",
+                                 ""locode"": ""{nextPort?.locode}"",
+                                 ""eta"": ""{GetDateByActual(nextMilestone?.arrival?.timestamps?.predicted, false) ?? GetDateByActual(nextMilestone?.arrival?.timestamps?.carrier, false)}"",
+                            }},
+                            ""current_vessel_position"": {{
+                                ""latitude"": ""{currentVessel?.lastPosition?.coordinates?[1]}"",
+                                ""longitude"": ""{currentVessel?.lastPosition?.coordinates?[0]}"",
+                                ""timestamp"": ""{currentVessel?.lastPosition?.datetime}"",
+                                ""heading"": ""{currentVessel?.lastPosition?.course}"",
+                            }},
+                            ""current_vessel"": {{
+                                ""name"": ""{currentVessel?.name ?? ""}"",
+                                ""imo"": ""{currentVessel?.imo ?? ""}"",
+                                ""id"": ""{currentVessel?.vesselId ?? ""}"",
+                            }},
                             ""container_type_iso"": ""{data?.shipment?.identifiers?.ISOEquipmentCode ?? ""}"",
                             ""container_type_str"": """",
                             ""shipmentsubscription_status_verbose"": """",
@@ -327,7 +343,7 @@ namespace TrackedShipmentsAPI.Services
                             ""weight"": """",
                             ""status"": """",
                             ""lifecycle_status"": """",
-                            ""id_date"": """",
+                            ""id_date"": ""{carrierLatestStatus?.timestamps?.datetime ?? ""}"",
                             ""pol_vsldeparture_planned_initial"": ""{data?.shipment?.initialCarrierETD}"",
                             ""pol_vsldeparture_planned_last"": """",
                             ""pol_vsldeparture_actual"": ""{polLocMilestone?.departure?.timestamps?.carrier?.datetime ?? ""}"",

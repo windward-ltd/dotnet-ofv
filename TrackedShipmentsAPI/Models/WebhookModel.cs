@@ -120,6 +120,9 @@ namespace TrackedShipmentsAPI.Models
 
         [JsonProperty("vesselId")]
         public string? vesselId { get; set; }
+
+        [JsonProperty("timestamps")]
+        public Timestamps? timestamps { get; set; }
     }
 
     public class Timestamps
@@ -133,6 +136,9 @@ namespace TrackedShipmentsAPI.Models
 
     public class Port
     {
+        [JsonProperty("portId")]
+        public string? portId { get; set; }
+
         [JsonProperty("name")]
         public string? name { get; set; }
 
@@ -146,16 +152,34 @@ namespace TrackedShipmentsAPI.Models
         public string? timezone { get; set; }
 
         [JsonProperty("coordinates")]
-        public string[]? coordinates { get; set; }
+        public float[]? coordinates { get; set; }
     }
 
     public class Vessel
     {
+        [JsonProperty("vesselId")]
+        public string? vesselId { get; set; }
+
         [JsonProperty("name")]
         public string? name { get; set; }
 
         [JsonProperty("imo")]
         public string? imo { get; set; }
+
+        [JsonProperty("lastPosition")]
+        public LastPosition? lastPosition { get; set; }
+    }
+
+    public class LastPosition
+    {
+        [JsonProperty("coordinates")]
+        public float[]? coordinates { get; set; }
+
+        [JsonProperty("datetime")]
+        public string? datetime { get; set; }
+
+        [JsonProperty("course")]
+        public int? course { get; set; }
     }
 
     public class Milestone
