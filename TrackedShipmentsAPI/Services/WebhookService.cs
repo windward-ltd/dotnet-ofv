@@ -34,8 +34,7 @@ namespace TrackedShipmentsAPI.Services
 
         public Dictionary<string, string> wwEventsMapping = new Dictionary<string, string>
         {
-            { GATE_IN_AT_POL, "origin" },
-            { ARRIVAL_AT_POL, "pol_arrival" },
+            { GATE_IN_AT_POL, "pol_arrival" },
             { LOADED_AT_POL, "pol_loaded" },
             { EMPTY_TO_SHIPPER, "empty_pickup" },
             { PICKUP_AT_SHIPPER, "origin_pickup" },
@@ -158,18 +157,27 @@ namespace TrackedShipmentsAPI.Services
             JObject aggregatedEventsJson = new JObject();
             JObject eventLocJson = new JObject();
 
+            string originPrefix = "origin";
+            aggregatedEventsJson[$"{originPrefix}_planned_initial"] = "";
+            aggregatedEventsJson[$"{originPrefix}_actual"] = "";
+            aggregatedEventsJson[$"{originPrefix}_planned_last"] = "";
+
             foreach (string key in wwEventsMapping.Keys)
             {
                 string prefix = wwEventsMapping[key];
+
+                Event? matchingEventByKey = filteredEvents.FirstOrDefault((item) => item.description == key);
+
+                if (matchingEventByKey?.description == GATE_IN_AT_POL) {                    
+                    AddLocData(json, port, originPrefix);
+                }
 
                 aggregatedEventsJson[$"{prefix}_planned_initial"] = "";
                 aggregatedEventsJson[$"{prefix}_actual"] = GetEventData(events, key, true);
                 aggregatedEventsJson[$"{prefix}_planned_last"] = GetEventData(events, key, false);
 
-                Event? matchingEventByKey = filteredEvents.FirstOrDefault((item) => item.description == key);
-                if (matchingEventByKey?.description == ARRIVAL_AT_POL)
-                {
-                    aggregatedEventsJson[$"pol_vsldeparture_planned_last"] = GetEventData(events, key, false);
+                if (matchingEventByKey?.description == GATE_IN_AT_POL) {                    
+                    aggregatedEventsJson[$"pol_vsldeparture_planned_last"] = GetEventData(events, ARRIVAL_AT_POL, false);
                 }
 
                 Port? port = matchingEventByKey?.portId != null ? portsDict[matchingEventByKey?.portId ?? ""] : new Port();
