@@ -34,8 +34,7 @@ namespace TrackedShipmentsAPI.Services
 
         public Dictionary<string, string> wwEventsMapping = new Dictionary<string, string>
         {
-            { GATE_IN_AT_POL, "origin" },
-            { ARRIVAL_AT_POL, "pol_arrival" },
+            { GATE_IN_AT_POL, "pol_arrival" },
             { LOADED_AT_POL, "pol_loaded" },
             { EMPTY_TO_SHIPPER, "empty_pickup" },
             { PICKUP_AT_SHIPPER, "origin_pickup" },
@@ -167,14 +166,13 @@ namespace TrackedShipmentsAPI.Services
                 aggregatedEventsJson[$"{prefix}_planned_last"] = GetEventData(events, key, false);
 
                 Event? matchingEventByKey = filteredEvents.FirstOrDefault((item) => item.description == key);
-                if (matchingEventByKey?.description == ARRIVAL_AT_POL)
-                {
-                    aggregatedEventsJson[$"pol_vsldeparture_planned_last"] = GetEventData(events, key, false);
-                }
-
                 Port? port = matchingEventByKey?.portId != null ? portsDict[matchingEventByKey?.portId ?? ""] : new Port();
                 AddLocData(json, port, prefix);
             }
+
+            Event? arrivalAtPolEvent = filteredEvents.FirstOrDefault((item) => item.description == ARRIVAL_AT_POL);
+            Port? arrivalAtPolPort = arrivalAtPolEvent?.portId != null ? portsDict[arrivalAtPolEvent?.portId ?? ""] : new Port();
+            AddLocData(json, arrivalAtPolPort, "origin");
             
             MergeToMainJson(json, aggregatedEventsJson);
         }
@@ -344,8 +342,11 @@ namespace TrackedShipmentsAPI.Services
                             ""status"": """",
                             ""lifecycle_status"": """",
                             ""id_date"": ""{carrierLatestStatus?.timestamps?.datetime ?? ""}"",
+                            ""origin_planned_initial"": """",
+                            ""origin_actual"": """",
+                            ""origin_planned_last"": """",
                             ""pol_vsldeparture_planned_initial"": ""{data?.shipment?.initialCarrierETD}"",
-                            ""pol_vsldeparture_planned_last"": """",
+                            ""pol_vsldeparture_planned_last"": ""{GetEventData(events, ARRIVAL_AT_POL, false)}"",
                             ""pol_vsldeparture_actual"": ""{polLocMilestone?.departure?.timestamps?.carrier?.datetime ?? ""}"",
                             ""pol_vsldeparture_detected"": ""{polLocMilestone?.departure?.timestamps?.predicted?.datetime ?? ""}"",
                             ""pod_vslarrival_planned_initial"": ""{data?.shipment?.initialCarrierETA}"",
