@@ -130,6 +130,9 @@ namespace TrackedShipmentsAPI.Models
         [JsonProperty("datetime")]
         public string? datetime { get; set; }
 
+        [JsonProperty("datetimeLocalized")]
+        public string? datetimeLocalized { get; set; }
+
         [JsonProperty("code")]
         public string? code { get; set; }
     }
