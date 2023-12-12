@@ -25,16 +25,16 @@ namespace TrackedShipmentsAPI.Controllers
         {
             try
             {
-                dynamic? webhookObject = JObject.Parse(webhook.GetRawText());
+                dynamic? deserializedWebhookObject = JsonConvert.DeserializeObject<JObject>(webhook.GetRawText(), new JsonSerializerSettings {
+                    DateParseHandling = DateParseHandling.None
+                });
 
-                string? sentAt = webhookObject?.data?.metadata?.sentAt;
+                string? sentAt = deserializedWebhookObject?.data?.metadata?.sentAt;
 
-                var enrichedData = _service.AddDataToJSON(webhookObject?.data, sentAt);
+                var enrichedData = _service.AddDataToJSON(deserializedWebhookObject?.data, sentAt);
                 var result = _service.JsonToXML(enrichedData);
 
-                var xmlString = result.OuterXml;
-
-                return Content(xmlString, "application/xml");
+                return Content(result, "application/xml");
             }
             catch (Exception ex)
             {
