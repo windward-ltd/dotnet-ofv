@@ -46,24 +46,45 @@ namespace TrackedShipmentsAPI.Services
 
         public void MergeToMainJson(JObject mainJson, JObject jsonToMerge)
         {
-            JObject parsedJson = JObject.Parse($@"
+            dynamic? parsedJson = JsonConvert.DeserializeObject<JObject>($@"
             {{
                 ""Root"": {{
                     ""container"": {{
                         ""shipment"": {jsonToMerge.ToString()}
                     }}
                 }}
-            }}");
+            }}", new JsonSerializerSettings {
+                DateParseHandling = DateParseHandling.None
+            });
 
             mainJson.Merge(parsedJson);
         }
-
-        // Converts json object to XML
-        public XmlDocument? JsonToXML(string jsonData)
+       
+        public string JsonToXML(string jsonData)
         {
-            XmlDocument? doc = JsonConvert.DeserializeXmlNode(jsonData);
+            var settings = new JsonSerializerSettings
+            {
+                Converters = { new Newtonsoft.Json.Converters.XmlNodeConverter() },
+                DateParseHandling = DateParseHandling.None,
+            };
 
-            return doc;
+            var doc = JsonConvert.DeserializeObject<XmlDocument>(jsonData, settings);
+            var xmlSettings = new XmlWriterSettings
+            {
+                CloseOutput = true,
+                Encoding = Encoding.UTF8,
+            };
+
+            string xml;
+            using (var ms = new MemoryStream())
+            using (var xw = XmlWriter.Create(ms, xmlSettings))
+            {
+                doc?.WriteTo(xw);
+                xw.Flush();
+                xml = xmlSettings.Encoding.GetString(ms.ToArray());
+            }
+            
+            return xml;
         }
 
         public Dictionary<string, T> CreateDictionaryFromJson<T>(dynamic arrayElement, string keyName)
@@ -393,7 +414,6 @@ namespace TrackedShipmentsAPI.Services
             // Convert the updated JSON structure back to a string
             string updatedJson = json.ToString();
 
-            // return updatedJson;
             return updatedJson;
         }
     }
