@@ -296,14 +296,11 @@ namespace TrackedShipmentsAPI.Services
 
         public static Port? GetNextPort(Vessel? currentVessel, Milestone? nextMilestone, Dictionary<string, Port> portsDict)
         {
-            if (currentVessel != null && nextMilestone?.arrival != null)
+            if (currentVessel != null && nextMilestone?.arrival?.vesselId == currentVessel?.vesselId && nextMilestone?.portId != null)
             {
-                if (nextMilestone.arrival?.vesselId == currentVessel.vesselId && nextMilestone.portId != null)
+                if (portsDict.ContainsKey(nextMilestone.portId))
                 {
-                    if (portsDict.ContainsKey(nextMilestone.portId))
-                    {
-                        return portsDict[nextMilestone.portId];
-                    }
+                    return portsDict[nextMilestone.portId];
                 }
             }
 
