@@ -294,6 +294,22 @@ namespace TrackedShipmentsAPI.Services
             }
         }
 
+        public static Port? GetNextPort(Vessel? currentVessel, Milestone? nextMilestone, Dictionary<string, Port> portsDict)
+        {
+            if (currentVessel != null && nextMilestone?.arrival != null)
+            {
+                if (nextMilestone.arrival?.vesselId == currentVessel.vesselId && nextMilestone.portId != null)
+                {
+                    if (portsDict.ContainsKey(nextMilestone.portId))
+                    {
+                        return portsDict[nextMilestone.portId];
+                    }
+                }
+            }
+
+            return new Port();
+        }
+
         // Aggregates the relevant data from all functions to the JSON
         public string AddDataToJSON(dynamic data, string sentAt)
         {
@@ -315,7 +331,7 @@ namespace TrackedShipmentsAPI.Services
             Vessel? currentVessel = carrierLatestStatus?.vesselId != null ? vesselsDict[carrierLatestStatus?.vesselId ?? ""] : new Vessel();
 
             Milestone? nextMilestone = milestones.FirstOrDefault((Milestone milestone) => milestone?.arrival?.timestamps?.carrier?.datetime != null && milestone?.arrival?.timestamps?.carrier?.code == PLANNED_CODE);
-            Port? nextPort = currentVessel != null & nextMilestone?.arrival?.vesselId == currentVessel?.vesselId ? portsDict[nextMilestone?.portId ?? ""] : new Port();
+            Port? nextPort = GetNextPort(currentVessel, nextMilestone, portsDict);
             Milestone? lastMilestone = milestones.Last();
 
             string? podVesselArrivalPlannedLast = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, false);
