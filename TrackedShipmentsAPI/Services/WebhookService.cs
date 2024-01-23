@@ -271,6 +271,29 @@ namespace TrackedShipmentsAPI.Services
             MergeToMainJson(json, aggregatedTransshipmentsJson);
         }
 
+        public static string ExtractDateTimeFromObjectId(string objectId)
+        {
+            if (objectId.Length == 24)
+            {
+                try
+                {
+                    string timestampHex = objectId.Substring(0, 8);
+                    int timestampInt = Convert.ToInt32(timestampHex, 16);
+                    DateTime timestamp = DateTimeOffset.FromUnixTimeSeconds(timestampInt).UtcDateTime;
+
+                    return timestamp.ToString("yyyy-MM-dd HH:mm:ss");
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException("Invalid ObjectId format.", ex);
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Invalid ObjectId format.");
+            }
+        }
+
         // Aggregates the relevant data from all functions to the JSON
         public string AddDataToJSON(dynamic data, string sentAt)
         {
@@ -280,6 +303,7 @@ namespace TrackedShipmentsAPI.Services
             Dictionary<string, Port> portsDict = CreateDictionaryFromJson<Port>(data?.shipment?.ports, "portId");
             Dictionary<string, Vessel> vesselsDict = CreateDictionaryFromJson<Vessel>(data?.shipment?.vessels, "vesselId");
 
+            string? trackedShipmentId = data?.shipment?.identifiers?.trackedShipmentId;
             string? shipmentId = data?.shipment?.identifiers?.shipmentId;
 
             string? podVesselArrivalDetected = data?.shipments?.predicted?.code == ACTUAL_CODE ? data?.shipments?.predicted?.datetime : "";
@@ -292,9 +316,12 @@ namespace TrackedShipmentsAPI.Services
 
             Milestone? nextMilestone = milestones.FirstOrDefault((Milestone milestone) => milestone?.arrival?.timestamps?.carrier?.datetime != null && milestone?.arrival?.timestamps?.carrier?.code == PLANNED_CODE);
             Port? nextPort = currentVessel != null & nextMilestone?.arrival?.vesselId == currentVessel?.vesselId ? portsDict[nextMilestone?.portId ?? ""] : new Port();
+            Milestone? lastMilestone = milestones.Last();
 
             string? podVesselArrivalPlannedLast = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, false);
             string? podVesselArrivalActual = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, true);
+
+            string idDate = ExtractDateTimeFromObjectId(trackedShipmentId);
 
             // Parse the JSON structure
             JObject json = JObject.Parse($@"
@@ -324,7 +351,7 @@ namespace TrackedShipmentsAPI.Services
                             ""current_vessel_nextport"": {{
                                  ""name"": ""{nextPort?.name}"",
                                  ""locode"": ""{nextPort?.locode}"",
-                                 ""eta"": ""{GetDateByActual(nextMilestone?.arrival?.timestamps?.predicted, false) ?? GetDateByActual(nextMilestone?.arrival?.timestamps?.carrier, false)}"",
+                                 ""eta"": ""{GetDateByActual(nextMilestone?.arrival?.timestamps?.predicted, false) ?? GetDateByActual(nextMilestone?.arrival?.timestamps?.carrier, false) ?? GetDateByActual(lastMilestone?.arrival?.timestamps?.predicted, true) ?? GetDateByActual(lastMilestone?.arrival?.timestamps?.carrier, true)}"",
                             }},
                             ""current_vessel_position"": {{
                                 ""latitude"": ""{currentVessel?.lastPosition?.coordinates?[1]}"",
@@ -362,7 +389,7 @@ namespace TrackedShipmentsAPI.Services
                             ""weight"": """",
                             ""status"": """",
                             ""lifecycle_status"": """",
-                            ""id_date"": ""{carrierLatestStatus?.timestamps?.datetime ?? ""}"",
+                            ""id_date"": ""{idDate}"",
                             ""origin_planned_initial"": """",
                             ""origin_actual"": """",
                             ""origin_planned_last"": """",
