@@ -332,7 +332,7 @@ namespace TrackedShipmentsAPI.Services
             Milestone? lastMilestone = milestones.Last();
 
             string? podVesselArrivalPlannedLast = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, false);
-            string? podVesselArrivalActual = GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, true);
+            string? podVesselArrivalActual = GetDateByActual(podLocMilestone?.arrival?.timestamps?.predicted, true) ?? GetDateByActual(podLocMilestone?.arrival?.timestamps?.carrier, true);
 
             string idDate = ExtractDateTimeFromObjectId(trackedShipmentId);
 
