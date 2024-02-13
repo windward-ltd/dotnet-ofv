@@ -371,6 +371,7 @@ namespace TrackedShipmentsAPI.Services
                                 ""longitude"": ""{currentVessel?.lastPosition?.coordinates?[0]}"",
                                 ""timestamp"": ""{currentVessel?.lastPosition?.datetime}"",
                                 ""heading"": ""{currentVessel?.lastPosition?.course}"",
+                                ""ExtShipmentLink"": ""{data?.shipment?.route?.shareableShipmentLink}""
                             }},
                             ""current_vessel"": {{
                                 ""name"": ""{currentVessel?.name ?? ""}"",

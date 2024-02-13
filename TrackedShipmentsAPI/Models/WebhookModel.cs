@@ -4,7 +4,7 @@ namespace TrackedShipmentsAPI.Models
 {
     public class WebhookModel
     {
-        [JsonProperty("data")]
+        [JsonProperty("shipment")]
         public Shipment? shipment { get; set; }
 
         [JsonProperty("metadata")]
@@ -36,6 +36,15 @@ namespace TrackedShipmentsAPI.Models
 
         [JsonProperty("ports")]
         public List<Port>? ports { get; set; }
+
+        [JsonProperty("route")]
+        public Route? route { get; set; }
+    }
+
+    public class Route
+    {
+        [JsonProperty("shareableShipmentLink")]
+        public string? shareableShipmentLink { get; set; }
     }
 
     public class Metadata
